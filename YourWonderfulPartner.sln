@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.34928.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YourWonderfulPartner", "YourWonderfulPartner\YourWonderfulPartner.csproj", "{A34A315E-4836-49E2-911C-D9C6E93AD8D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YourWonderfulPartner", "YourWonderfulPartner\YourWonderfulPartner.csproj", "{A34A315E-4836-49E2-911C-D9C6E93AD8D3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreateFakeUsers", "CreateFakeUsers\CreateFakeUsers.csproj", "{EB77FCBE-8E4C-4BDC-98DD-C83E7A05CB59}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{A34A315E-4836-49E2-911C-D9C6E93AD8D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A34A315E-4836-49E2-911C-D9C6E93AD8D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A34A315E-4836-49E2-911C-D9C6E93AD8D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB77FCBE-8E4C-4BDC-98DD-C83E7A05CB59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB77FCBE-8E4C-4BDC-98DD-C83E7A05CB59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB77FCBE-8E4C-4BDC-98DD-C83E7A05CB59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB77FCBE-8E4C-4BDC-98DD-C83E7A05CB59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

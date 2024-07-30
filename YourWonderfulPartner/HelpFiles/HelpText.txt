@@ -1,0 +1,19 @@
+﻿Lav Migration og opdater database med dine models
+
+
+Package Manager Console Host Version 6.10.0.97
+
+Type 'get-help NuGet' to see all available NuGet commands.
+
+PM> Add-Migration InitialCreate
+Build started...
+Build succeeded.
+To undo this action, use Remove-Migration.
+PM> Update-Database
+Build started...
+Build succeeded.
+Done.
+
+
+Add-Migration InitialCreate -Project YourWonderfulPartner -StartupProject YourWonderfulPartner
+Update-Database  -Project YourWonderfulPartner -StartupProject YourWonderfulPartner

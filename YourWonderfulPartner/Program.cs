@@ -1,5 +1,8 @@
 using YourWonderfulPartner.Services;
 using YourWonderfulPartner.Components;
+using YourWonderfulPartner.Data;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +11,21 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<EditState>();
+
+builder.Configuration.AddJsonFile("secrets.json", optional: true, reloadOnChange: true);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<YWPContext>(options =>
+options.UseSqlServer(connectionString));
+
+// Serilog configuration
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Warning()
+    .WriteTo.Console()
+    // Writing logs to a file
+    //.WriteTo.File("Logs/Whiskylog.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+builder.Host.UseSerilog();
 
 var app = builder.Build();
 
