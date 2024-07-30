@@ -1,4 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inherits LayoutComponentBase
+
+@* <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">YourWonderfulPartner</a>
     </div>
@@ -25,6 +27,29 @@
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
             </NavLink>
         </div>
-    </nav>
+    </nav> *@
+
+<nav class="navbar navbar-expand-lg navbar-toggler bg-secondary">
+    <a class="navbar-brand" href="">Taxa 4x27 </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">Home</NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="taxapricecalc">Udregn din pris</NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="taxaprice">Priser</NavLink>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="content px-4">
+    @Body
 </div>
 

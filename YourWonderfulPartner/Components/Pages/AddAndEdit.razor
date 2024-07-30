@@ -1,0 +1,450 @@
+﻿@page "/addandedit"
+
+    @using System.Collections.Generic
+    @using System.Threading.Tasks
+    @using Microsoft.EntityFrameworkCore
+    @using Microsoft.AspNetCore.Components.Forms
+
+    @using YourWonderfulPartner.Model
+    @using YourWonderfulPartner.Data
+    @using YourWonderfulPartner.Services
+
+    @inject YWPContext DbContext
+    @inject WhiskyService WhiskyService
+    @inject EditState EditState
+    @inject UserService UserService
+    @inject IFileUploadService FileUploadService
+
+    @inject Microsoft.Extensions.Logging.ILogger<AddAndEdit> Logger
+    @inject IJSRuntime JSRuntime
+    @inject NavigationManager Navigation
+    @rendermode InteractiveServer
+
+<style>
+    body {
+        background-color: rgba(100,1,1, 0.8);
+        margin-left: 20px
+    }
+
+    .content {
+        padding: 20px;
+        background-color: rgba(255, 255, 255, 0.8);
+    }
+</style>
+
+<h1 style="color: antiquewhite; margin-top: 70px">Whisky referater</h1>
+
+<!-- Buttons for user to insert and edit data -->
+@if (EditState.IsAdmin)
+{
+    <table>
+        <tr>
+            <td>
+                <button class="btn btn-primary" style="margin-right:15px" @onclick="IsNew">Ny whisky</button>
+            </td>
+            <td>
+                <button class="btn btn-primary" style="margin-right:15px" @onclick="EditProces">Redigér</button>
+            </td>
+            <td>
+                <button class="btn btn-primary" style="margin-right:15px" @onclick="Delete">Delete</button>
+            </td>
+            <td>
+                <button class="btn btn-warning" style="margin-right:15px" @onclick="SavePw">Skift Password</button>
+            </td>
+
+            <td><input type="password" id="inputField" class="form-control" name="inputField" size="20" @bind="newPw" title="nyt password"></td>
+
+            <td>
+                @if (pwChanged)
+                {
+                    <span>Password er skiftet</span>
+                }
+            </td>
+        </tr>
+
+        <tr><td>
+            @if (dataSaved)
+            {
+                <span>Whiskyreferat er gemt</span>
+            }
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="2">
+                @if (_isEdit)
+                {
+                    <!-- Drop down menu for chosing the apprentice to edit for admin -->
+
+                    <select style="margin-top:20px" class="custom-select" @onchange="HandleEditChoice">
+                        <option value="0">[Vælg whisky]</option>
+                        @foreach (var item in getWhisky)
+                        {
+                            <option class="custom-select option" value="@item.Id"> @item.Id. @item.Name</option>
+                        }
+                    </select>
+                }
+                else if (_isDelete)
+                {
+                    <!-- Drop down menu for chosing the apprentice to edit for admin -->
+                    <select style="margin-top:20px" class="custom-select" @onchange="HandleChoiceToDelete">
+                        <option value="0">[Vælg whisky]</option>
+                        @foreach (var item in getWhisky)
+                        {
+                            <option class="custom-select option" value="@item.Id"> @item.Id. @item.Name</option>
+                        }
+                    </select>
+                }
+            </td>
+        </tr>
+    </table>
+
+    <!-- _isNew is set to true, when clicking on the button 'Nyt forløb', and this part is shown -->
+    @if (_isNew == true || _isEdit == true)
+    {
+        <table class="table" style="width:400px;margin-top:20px">
+            <thead>
+                <tr>
+                    <th colspan="2" class="table-textcolor">Indtast data:</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Input fields with drop down menus and date fields to input data -->
+                <tr><td class="table-textcolor">Dato for referat:</td><td><input type="date" id="inputField1" class="form-control" name="inputField1" size="30" @bind="DateValue" title="Dato for referat"></td></tr>
+                <tr><td class="table-textcolor">Navn:</td><td><input type="text" id="inputField2" class="form-control" name="inputField2" size="30" @bind="NameValue" title="Skriv dit fornavn her"></td></tr>
+                <tr><td class="table-textcolor">Kategori:</td><td><input type="text" id="inputField3" class="form-control" name="inputField3" size="30" @bind="CategoryValue" title="Kategori fx. Single Malt"></td></tr>
+                <tr><td class="table-textcolor">Destilleri:</td><td><input type="text" id="inputField4" class="form-control" name="inputField4" size="30" @bind="DistilleryValue" title="Destilleriets navn"></td></tr>
+                <tr><td class="table-textcolor">Fad:</td><td><input type="text" id="inputField5" class="form-control" name="inputField5" size="30" @bind="CaskValue" title="Hvilke fad er den lagret i?"></td></tr>
+                <tr><td class="table-textcolor">På flaske i år:</td><td><input type="text" id="inputField6" class="form-control" name="inputField6" size="30" @bind="BottledValue" title="Årstal for hvornår den kom på flaske"></td></tr>
+                <tr><td class="table-textcolor">Alder:</td><td><input type="text" id="inputField7" class="form-control" name="inputField7" size="30" @bind="AgeValue" title="Hvor længe har den lagret på fad?"></td></tr>
+                <tr><td class="table-textcolor">Styrke:</td><td><input type="text" id="inputField8" class="form-control" name="inputField8" size="30" @bind="StrengthValue" title="Alkohol procent"></td></tr>
+                <tr><td class="table-textcolor">Næse:</td><td><input type="text" id="inputField9" class="form-control" name="inputField9" size="30" @bind="NoseValue" title="Point for næse"></td></tr>
+                <tr><td class="table-textcolor">Smag:</td><td><input type="text" id="inputField10" class="form-control" name="inputField10" size="30" @bind="TasteValue" title="Point for smag"></td></tr>
+                <tr><td class="table-textcolor">Afslutning:</td><td><input type="text" id="inputField11" class="form-control" name="inputField11" size="30" @bind="FinishValue" title="Point for afslutning"></td></tr>
+                <tr><td class="table-textcolor">Balance:</td><td><input type="text" id="inputField12" class="form-control" name="inputField12" size="30" @bind="BalanceValue" title="Point for balance"></td></tr>
+                <tr><td class="table-textcolor">Noter om næse:</td><td><input type="text" id="inputField13" class="form-control" name="inputField13" size="30" @bind="NoseNoteValue" title="Noter om næsen"></td></tr>
+                <tr><td class="table-textcolor">Noter om smag:</td><td><input type="text" id="inputField14" class="form-control" name="inputField14" size="30" @bind="TasteNoteValue" title="Noter om smag"></td></tr>
+                <tr><td class="table-textcolor">Noter om afslutning:</td><td><input type="text" id="inputField15" class="form-control" name="inputField15" size="30" @bind="FinishNoteValue" title="Noter om afslutning"></td></tr>
+                <tr><td class="table-textcolor">Noter om balance:</td><td><input type="text" id="inputField16" class="form-control" name="inputField16" size="30" @bind="BalanceNoteValue" title="Noter om balance"></td></tr>
+                <tr><td class="table-textcolor">Noter om design:</td><td><input type="text" id="inputField17" class="form-control" name="inputField17" size="30" @bind="DesignNoteValue" title="Noter om design"></td></tr>
+        
+        <tr>
+                    <td class="table-textcolor">Upload Billede:</td>
+                    <td class="table-textcolor">
+                <InputFile OnChange="HandleFileSelected" />
+                @if (!string.IsNullOrEmpty(imageDataUrl))
+                {
+                    <img src="@imageDataUrl" alt="Uploaded Image" style="max-width: 100%; height: auto;" />
+                }
+            </td>
+        </tr>
+            </tbody>
+        </table>
+        if (_isNew == true)
+        {
+            <!-- data is saved by the push of this button -->
+            <button class="btn btn-primary" @onclick="SubmitData">Submit data</button>
+        }
+        else if (_isEdit == true)
+        {
+            <!-- data is saved by the push of this button -->
+            <button class="btn btn-primary" @onclick="SubmitEditedData">Submit data</button>
+        }
+
+    }
+
+}
+
+
+@code {
+    //Pictures
+    private byte[]? PictureData { get; set; }
+    private string? PictureName { get; set; }
+    private string? imageDataUrl;
+
+    //new password
+    public string? newPw { get; set; }
+    public bool pwChanged = false;
+    public bool dataSaved = false;
+
+    //Booleans to show/hide input fields
+    private bool _isNew;
+    private bool _isEdit;
+    private bool _isDelete;
+
+    //Property for id value
+    private int selectedWhisky { get; set; }
+
+    // //Field to use for showing login message box
+    // private LoginModal? _loginModal;
+
+    // Using a Property with Initialization to avoid potential runtime exceptions
+    private List<WhiskyData> getWhisky { get; set; } = new List<WhiskyData>();
+
+    public bool SeeAll { get; set; }
+    public bool SeeSelected { get; set; }
+
+    public int IdValue { get; set; }
+    public DateOnly? DateValue { get; set; }
+    public string? NameValue { get; set; }
+    public string? CategoryValue { get; set; }
+    public string? DistilleryValue { get; set; }
+    public string? CaskValue { get; set; }
+    public int? BottledValue { get; set; }
+    public string? AgeValue { get; set; }
+    public decimal? StrengthValue { get; set; }
+    public decimal? NoseValue { get; set; }
+    public decimal? TasteValue { get; set; }
+    public decimal? FinishValue { get; set; }
+    public decimal? BalanceValue { get; set; }
+    public string? NoseNoteValue { get; set; }
+    public string? TasteNoteValue { get; set; }
+    public string? FinishNoteValue { get; set; }
+    public string? BalanceNoteValue { get; set; }
+    public string? DesignNoteValue { get; set; }
+
+    //Startup
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Fetching data from the database asynchronously
+            getWhisky = await DbContext.WhiskyNotes.ToListAsync();
+
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions, log error, or show appropriate message
+            Console.WriteLine($"Error fetching products: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Setting for showing the insert new input fields, checking if pc name already has entered a proces (forløb). Admin can change all fields,
+    /// but normal user cannot edit PcName.
+    /// </summary>
+    private void IsNew()
+    {
+        _isNew = true;
+        _isEdit = false;
+
+        DateValue = null;
+        NameValue = "";
+        CategoryValue = "";
+        DistilleryValue = "";
+        CaskValue = "";
+        BottledValue = null;
+        AgeValue = null;
+        StrengthValue = null;
+        NoseValue = null;
+        TasteValue = null;
+        FinishValue = null;
+        BalanceValue = null;
+        NoseNoteValue = "";
+        TasteNoteValue = "";
+        FinishNoteValue = "";
+        BalanceNoteValue = "";
+        DesignNoteValue = "";
+    }
+
+    /// <summary>
+    /// Setting for showing the edit input fields, and get data entry connected to users pc name
+    /// </summary>
+    public void EditProces()
+    {
+        Navigation.NavigateTo("/addandedit");
+        _isEdit = true;
+        _isNew = false;
+
+        Logger.LogWarning("EditProces() method is called.");
+    }
+
+    /// <summary>
+    /// Delete data after accepting connected to users pc login name or choice from admin
+    /// </summary>
+    /// <returns></returns>
+    private void Delete()
+    {
+        _isDelete = true;
+        _isEdit = false;
+        _isNew = false;
+    }
+
+    private async Task SavePw()
+    {
+        string? userLoggedIn = EditState.Username;
+
+        if (newPw != null && userLoggedIn != null)
+        {
+            await UserService.UpdateUserPasswordAsync(userLoggedIn, newPw);
+            pwChanged = true;
+            Logger.LogWarning($"Password was changed by {userLoggedIn}.");
+        }
+        EditState.IsAdmin = false;
+        Navigation.NavigateTo("");
+    }
+
+    /// <summary>
+    /// Show data to edit in input fields from choice from admins drop down menu
+    /// </summary>
+    /// <param name="choice"></param>
+    private void HandleEditChoice(ChangeEventArgs e)
+    {
+        if (e.Value != null)
+        {
+            selectedWhisky = int.Parse(e.Value.ToString() ?? string.Empty);
+        }
+        else
+        {
+            selectedWhisky = 0;
+        }
+        var getData = getWhisky.First(a => a.Id == selectedWhisky);
+
+        IdValue = selectedWhisky;
+        DateValue = getData.Date;
+        NameValue = getData.Name;
+        CategoryValue = getData.Category;
+        DistilleryValue = getData.Distillery;
+        CaskValue = getData.Cask;
+        BottledValue = getData.Bottled;
+        AgeValue = getData.Age;
+        StrengthValue = getData.Strength;
+        NoseValue = getData.Nose;
+        TasteValue = getData.Taste;
+        FinishValue = getData.Finish;
+        BalanceValue = getData.Balance;
+        NoseNoteValue = getData.NoseNote;
+        TasteNoteValue = getData.TasteNote;
+        FinishNoteValue = getData.FinishNote;
+        BalanceNoteValue = getData.BalanceNote;
+        DesignNoteValue = getData.DesignNote;
+    }
+
+    private async Task HandleChoiceToDelete(ChangeEventArgs e)
+    {
+        if (e.Value != null)
+        {
+            selectedWhisky = int.Parse(e.Value.ToString() ?? string.Empty);
+        }
+        else
+        {
+            selectedWhisky = 0;
+        }
+        var getData = getWhisky.First(a => a.Id == selectedWhisky);
+
+        IdValue = selectedWhisky;
+        DateValue = getData.Date;
+        NameValue = getData.Name;
+        CategoryValue = getData.Category;
+        DistilleryValue = getData.Distillery;
+        CaskValue = getData.Cask;
+        BottledValue = getData.Bottled;
+        AgeValue = getData.Age;
+        StrengthValue = getData.Strength;
+        NoseValue = getData.Nose;
+        TasteValue = getData.Taste;
+        FinishValue = getData.Finish;
+        BalanceValue = getData.Balance;
+        NoseNoteValue = getData.NoseNote;
+        TasteNoteValue = getData.TasteNote;
+        FinishNoteValue = getData.FinishNote;
+        BalanceNoteValue = getData.BalanceNote;
+        DesignNoteValue = getData.DesignNote;
+
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Er du sikker på, at du vil slette?");
+        if (confirmed)
+        {
+            //Get entry to delete from id
+            var whiskyData = DbContext.WhiskyNotes.SingleOrDefault(a => a.Id == selectedWhisky);
+            if (whiskyData != null)
+            {
+                try
+                {
+                    //Delete entry
+                    DbContext.WhiskyNotes.Remove(whiskyData);
+                    DbContext.SaveChanges();
+                    Logger.LogWarning($"Data was deleted by administrator Id: {whiskyData.Id}.");
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"Exception: {ex}");
+                }
+            }
+        }
+        Navigation.NavigateTo("/whiskynotesview");
+    }
+
+    /// <summary>
+    /// Getting data from user input and save to db
+    /// </summary>
+    private void SubmitData()
+    {
+        WhiskyData newWhisky = new WhiskyData
+            {
+                Date = DateValue,
+                Name = NameValue,
+                Category = CategoryValue,
+                Distillery = DistilleryValue,
+                Cask = CaskValue,
+                Bottled = BottledValue,
+                Age = AgeValue,
+                Strength = StrengthValue,
+                Nose = NoseValue,
+                Taste = TasteValue,
+                Finish = FinishValue,
+                Balance = BalanceValue,
+                NoseNote = NoseNoteValue,
+                TasteNote = TasteNoteValue,
+                FinishNote = FinishNoteValue,
+                BalanceNote = BalanceNoteValue,
+                DesignNote = DesignNoteValue,
+                PictureData = PictureData,
+                PictureName = PictureName,
+            };
+        //Save and handle exceptions
+        try
+        {
+            DbContext.Add(newWhisky);
+            DbContext.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+
+            Logger.LogError($"Exception: {ex}");
+        }
+        Navigation.NavigateTo("/whiskynotesview");
+        _isDelete = false;
+        _isEdit = false;
+        _isNew = false;
+    }
+
+    /// <summary>
+    /// Save data using constructor to save the edited values to db
+    /// </summary>
+    /// <param name="e"></param>
+    private void SubmitEditedData(MouseEventArgs e)
+    {
+        WhiskyService.UpdateWhiskyData(IdValue, DateValue, NameValue, CategoryValue, DistilleryValue, CaskValue, BottledValue, AgeValue, StrengthValue, NoseValue, TasteValue, FinishValue, BalanceValue, NoseNoteValue, TasteNoteValue, FinishNoteValue, BalanceNoteValue, DesignNoteValue,PictureName, PictureData);
+
+        Logger.LogWarning($"Data was edited and saved to database by {EditState.Username}");
+
+        Navigation.NavigateTo("/whiskynotesview");
+        _isDelete = false;
+        _isEdit = false;
+        _isNew = false;
+    }
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var selectedFile = e.File;
+        PictureName = selectedFile.Name;
+        PictureData = await FileUploadService.UploadFileAsync(selectedFile);
+        
+
+        // Determine the MIME type based on the file extension
+        string mimeType = selectedFile.ContentType; // This will automatically give you the correct MIME type
+
+        // Create the data URL
+        imageDataUrl = $"data:{mimeType};base64,{Convert.ToBase64String(PictureData)}";
+    }
+
+}
